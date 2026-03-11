@@ -15,7 +15,7 @@ from google.oauth2.credentials import Credentials
 # The scope defines what permission we are asking for
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
-# This is the "catch" link. We will update this later when it goes live!
+# 🚨 CHANGE THIS TO YOUR ACTUAL STREAMLIT LINK! Must end with a slash /
 REDIRECT_URI = "https://team-emailer-dzaxgjqptyvytoenfpappnm.streamlit.app/"
 
 st.set_page_config(page_title="Team Campaign Sender", layout="centered")
@@ -42,24 +42,19 @@ def get_flow():
     )
 
 # --- WEB AUTHENTICATION CATCHER ---
-# This checks if Google just redirected the user back with a secret code
 if 'code' in st.query_params:
     try:
         flow = get_flow()
         flow.fetch_token(code=st.query_params['code'])
         creds = flow.credentials
         
-        # Save the credentials temporarily to the web session
         st.session_state['creds_json'] = creds.to_json()
-        
-        # Erase the code from the URL so it doesn't try to log in twice
         st.query_params.clear()
         st.rerun()
     except Exception as e:
         st.error(f"Authentication failed: {e}")
 
 # --- LOGIN SCREEN ---
-# If they aren't logged in, show them the link and stop the app
 if not st.session_state['creds_json']:
     st.write("### 1. Account Setup")
     st.info("Because this is a web application, you will securely log in through Google.")
@@ -67,12 +62,10 @@ if not st.session_state['creds_json']:
     flow = get_flow()
     auth_url, _ = flow.authorization_url(prompt='consent')
     
-    # Show a clickable link to Google's login page
     st.markdown(f"### [🔐 Click Here to Authorize with Google]({auth_url})")
     st.stop()
 
 # --- MAIN APP (Only visible after login) ---
-# Rebuild the key from the temporary session memory
 creds = Credentials.from_authorized_user_info(json.loads(st.session_state['creds_json']))
 service = build('gmail', 'v1', credentials=creds)
 
