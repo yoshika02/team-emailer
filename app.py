@@ -17,7 +17,7 @@ from google.oauth2.credentials import Credentials
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
 # 🚨 CHANGE THIS TO YOUR ACTUAL STREAMLIT LINK! Must end with a slash /
-REDIRECT_URI = "https://team-emailer-dzaxgjqptyvytoenfpappnm.streamlit.app"
+REDIRECT_URI = "https://team-emailer-dzaxgjqptyvytoenfpappnm.streamlit.app/"
 
 st.set_page_config(page_title="Team Campaign Sender", layout="centered")
 st.title("🚀 Smart Team Campaign Emailer (Web Version)")
