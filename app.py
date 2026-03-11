@@ -16,7 +16,7 @@ from google.oauth2.credentials import Credentials
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
 # This is the "catch" link. We will update this later when it goes live!
-REDIRECT_URI = "http://localhost:8501/"
+REDIRECT_URI = "https://team-emailer-dzaxgjqptyvytoenfpappnm.streamlit.app/"
 
 st.set_page_config(page_title="Team Campaign Sender", layout="centered")
 st.title("🚀 Smart Team Campaign Emailer (Web Version)")
@@ -26,6 +26,15 @@ if 'creds_json' not in st.session_state:
     st.session_state['creds_json'] = None
 
 def get_flow():
+    # If it's running on the cloud, use the secret vault
+    if 'gcp_secret' in st.secrets:
+        creds_dict = json.loads(st.secrets["gcp_secret"])
+        return Flow.from_client_config(
+            creds_dict,
+            scopes=SCOPES,
+            redirect_uri=REDIRECT_URI
+        )
+    # If running on your local computer, use the file
     return Flow.from_client_secrets_file(
         'credentials.json',
         scopes=SCOPES,
