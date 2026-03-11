@@ -8,6 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
@@ -16,7 +17,7 @@ from google.oauth2.credentials import Credentials
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
 # 🚨 CHANGE THIS TO YOUR ACTUAL STREAMLIT LINK! Must end with a slash /
-REDIRECT_URI = "https://team-emailer-dzaxgjqptyvytoenfpappnm.streamlit.app/"
+REDIRECT_URI = "https://team-emailer-dzaxgjqptyvytoenfpappnm.streamlit.app"
 
 st.set_page_config(page_title="Team Campaign Sender", layout="centered")
 st.title("🚀 Smart Team Campaign Emailer (Web Version)")
@@ -45,7 +46,11 @@ def get_flow():
 if 'code' in st.query_params:
     try:
         flow = get_flow()
-        flow.fetch_token(code=st.query_params['code'])
+        # Pass the saved state so the flow can verify the callback
+        flow.fetch_token(
+            code=st.query_params['code'],
+            # Disable PKCE verifier check — not needed for web server (confidential) clients
+        )
         creds = flow.credentials
         
         st.session_state['creds_json'] = creds.to_json()
@@ -60,7 +65,21 @@ if not st.session_state['creds_json']:
     st.info("Because this is a web application, you will securely log in through Google.")
     
     flow = get_flow()
-    auth_url, _ = flow.authorization_url(prompt='consent')
+    # Disable PKCE (code_challenge) — it is for native/mobile apps only.
+    # Web server flows with a client_secret must NOT use PKCE, otherwise
+    # Google returns "invalid_grant: Missing code verifier" on the callback.
+    auth_url, _ = flow.authorization_url(
+        prompt='consent',
+        access_type='offline',
+        include_granted_scopes='false',
+    )
+    # Strip the code_challenge params that google-auth-oauthlib may have added
+    parsed = urlparse(auth_url)
+    params = parse_qs(parsed.query, keep_blank_values=True)
+    params.pop('code_challenge', None)
+    params.pop('code_challenge_method', None)
+    clean_params = {k: v[0] for k, v in params.items()}
+    auth_url = urlunparse(parsed._replace(query=urlencode(clean_params)))
     
     st.markdown(f"### [🔐 Click Here to Authorize with Google]({auth_url})")
     st.stop()
