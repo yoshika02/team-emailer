@@ -145,7 +145,7 @@ if uploaded_file is not None and sender_email and subject and body:
         
         st.success(f"🧹 Cleaned! Found **{len(final_emails)}** valid emails.")
         
-        batch_size = 500
+        batch_size = 400
         batches = [final_emails[i:i + batch_size] for i in range(0, len(final_emails), batch_size)]
         
         st.write(f"### 5. Send Batches (Sizes of {batch_size})")
